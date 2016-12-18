@@ -6,12 +6,15 @@
 //used a lot of ideas from https://bl.ocks.org/robinhouston/ed597847175cf692ecce to clean this code up
 
 var gl;
-var canvas;
+var canvas, $canvas;
 var frameBuffers;
 var states = [null, null];
 
 var resizedLastState;
 var resizedCurrentState;
+
+var dpi = 72;
+var pentEdgeLength = 5;// inches
 
 var width;
 var height;
@@ -29,20 +32,11 @@ var mouseEnable = false;
 
 var paused = false;//while window is resizing
 
-window.onload = initGL;
-
-function initGL() {
+$(function(){
 
     // Get A WebGL context
     canvas = document.getElementById("glcanvas");
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-
-    canvas.onmousemove = onMouseMove;
-    canvas.onmousedown = onMouseDown;
-    canvas.onmouseup = onMouseUp;
-
-    window.onresize = onResize;
+    $canvas = $("#glcanvas");
 
     gl = canvas.getContext("webgl", {antialias:false}) || canvas.getContext("experimental-webgl", {antialias:false});
     if (!gl) {
@@ -62,24 +56,28 @@ function initGL() {
     gl.useProgram(stepProgram);
     loadVertexData(gl, stepProgram);
 
-
     textureSizeLocation = gl.getUniformLocation(stepProgram, "u_textureSize");
     mouseCoordLocation = gl.getUniformLocation(stepProgram, "u_mouseCoord");
     mouseEnableLocation = gl.getUniformLocation(stepProgram, "u_mouseEnable");
 
-
     frameBuffers = [makeFrameBuffer(), makeFrameBuffer()];
+
+    initControls();
+
+    canvas.onmousemove = onMouseMove;
+    canvas.onmousedown = onMouseDown;
+    canvas.onmouseup = onMouseUp;
 
     resetWindow();
 
     gl.bindTexture(gl.TEXTURE_2D, states[0]);//original texture
 
     render();
-}
+});
 
 function loadVertexData(gl, program) {
 	gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ -1,-1, 1,-1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-0.95105651629, 0.30901699437, -0.58778525229,-0.80901699437, 0, 1, 0.58778525229,-0.80901699437, 0.95105651629, 0.30901699437]), gl.STATIC_DRAW);
 
     // look up where the vertex data needs to go.
 	var positionLocation = gl.getAttribLocation(program, "a_position");
@@ -90,7 +88,6 @@ function loadVertexData(gl, program) {
 function makeFrameBuffer(){
     return gl.createFramebuffer();
 }
-
 
 function makeRandomArray(rgba){
     for (var x=0;x<width;x++) {
@@ -163,9 +160,9 @@ function render(){
         //draw to canvas
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.bindTexture(gl.TEXTURE_2D, states[0]);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 5);
 
-    } else resetWindow();
+    }
 
     window.requestAnimationFrame(render);
 }
@@ -174,35 +171,14 @@ function step(i){
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffers[(i+1)%2]);
     gl.bindTexture(gl.TEXTURE_2D, states[i%2]);
 
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);//draw to framebuffer
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 5);//draw to framebuffer
 }
 
-function onResize(){
-    paused = true;
-}
 
 function resetWindow(){
+    //todo this
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    width = canvas.clientWidth;
-    height = canvas.clientHeight;
-
-    gl.viewport(0, 0, width, height);
-
-    // set the size of the texture
-    gl.useProgram(stepProgram);
-    gl.uniform2f(textureSizeLocation, width, height);
-    gl.useProgram(renderProgram);
-    gl.uniform2f(textureSizeLocationRender, width, height);
-
-    //texture for saving output from frag shader
-    resizedCurrentState = makeTexture(gl, null);
-
-    //fill with random pixels
-    var rgba = new Float32Array(width*height*4);
-    resizedLastState = makeTexture(gl, makeRandomArray(rgba));
-
-    paused = false;
 }
 
 function onMouseMove(e){
