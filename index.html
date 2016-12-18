@@ -51,8 +51,9 @@
         uniform vec2 u_mouseCoord;
         uniform float u_mouseEnable;
 
-        const float fParam = 0.0545;
-        const float kParam = 0.062;
+        uniform float u_killRate;
+        uniform float u_feedRate;
+
 	    const float DuParam = 0.2;
 	    const float DvParam = 0.1;
 	    const float dt = 1.0;
@@ -89,8 +90,8 @@
                 + texture2D(u_image, e/u_textureSize).xy + texture2D(u_image, w/u_textureSize).xy - 4.0*currentState;
 
             float uvSq = u*v*v;
-            vec2 delta = dt*vec2(DuParam*grad.x - uvSq + fParam*(1.0 - u),
-            DvParam*grad.y + uvSq - (fParam + kParam)*v);
+            vec2 delta = dt*vec2(DuParam*grad.x - uvSq + u_feedRate*(1.0 - u),
+            DvParam*grad.y + uvSq - (u_feedRate + u_killRate)*v);
 
             gl_FragColor = vec4(u + delta.x, v + delta.y, 0, 1);
         }

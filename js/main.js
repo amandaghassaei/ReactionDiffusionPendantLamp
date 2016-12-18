@@ -20,6 +20,8 @@ var panelModeSelection = "pentagon";
 var killRate = 0.062;
 var feedRate = 0.0545;
 
+var killRateLocation, feedRateLocation;
+
 var width;
 var height;
 
@@ -63,6 +65,8 @@ $(function(){
     textureSizeLocation = gl.getUniformLocation(stepProgram, "u_textureSize");
     mouseCoordLocation = gl.getUniformLocation(stepProgram, "u_mouseCoord");
     mouseEnableLocation = gl.getUniformLocation(stepProgram, "u_mouseEnable");
+    killRateLocation = gl.getUniformLocation(stepProgram, "u_killRate");
+    feedRateLocation = gl.getUniformLocation(stepProgram, "u_feedRate");
 
     frameBuffers = [makeFrameBuffer(), makeFrameBuffer()];
 
@@ -150,6 +154,9 @@ function render(){
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, states[1], 0);
             resizedCurrentState = null;
         }
+
+        gl.uniform1f(killRateLocation, killRate);
+        gl.uniform1f(feedRateLocation, feedRate);
 
         for (var i=0;i<40;i++) {
             if (paused) {
