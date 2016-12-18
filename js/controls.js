@@ -9,31 +9,6 @@ function initControls(){
         $('#aboutModal').modal('show');
     });
 
-    function scaleCallBack(val){
-        pentEdgeLength = val;
-        var pentWidth = Math.ceil(1.62*pentEdgeLength*dpi);
-        var pentHeight = Math.ceil(1.54*pentEdgeLength*dpi);
-        $canvas.width(pentWidth);
-        $canvas.height(pentHeight);
-
-        width = pentWidth;
-        height = pentHeight;
-
-         gl.viewport(0, 0, width, height);
-
-        // set the size of the texture
-        gl.useProgram(stepProgram);
-        gl.uniform2f(textureSizeLocation, width, height);
-        gl.useProgram(renderProgram);
-        gl.uniform2f(textureSizeLocationRender, width, height);
-
-        reset();
-
-        paused = false;
-    }
-    setSliderStopInput("scale", pentEdgeLength, 1, 100, 0.01, scaleCallBack);
-    scaleCallBack(pentEdgeLength);
-
     setRadio("panelMode", panelModeSelection, function(val){
         panelModeSelection = val;
     });
@@ -57,6 +32,10 @@ function initControls(){
         $("#play").show();
     });
 
+    setSliderInput("#scale", patternScale, 0.4, 2, 0.0001, function(val){
+        patternScale = val;
+    });
+
     $(window).keyup(function(e){
         if (e.keyCode == 32){
             isPaused = !isPaused;
@@ -68,6 +47,17 @@ function initControls(){
                 $("#play").hide();
             }
         }
+    });
+
+
+    setSliderInput("#vortexMag", vortexMag, 0, 5, 0.01, function(val){
+        vortexMag = val;
+    });
+    setSliderInput("#vortexInnerRad", vortexInnerRad, 0, 0.4, 0.01, function(val){
+        vortexInnerRad = val;
+    });
+    setSliderInput("#vortexOuterRad", vortexOuterRad, 0.6, 1.0, 0.01, function(val){
+        vortexOuterRad = val;
     });
 
 

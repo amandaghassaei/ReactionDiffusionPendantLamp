@@ -53,6 +53,11 @@
 
         uniform float u_killRate;
         uniform float u_feedRate;
+        uniform float u_patternScale;
+
+        uniform float u_vortexMag;
+        uniform float u_vortexInnerRad;
+        uniform float u_vortexOuterRad;
 
 	    const float DuParam = 0.2;
 	    const float DvParam = 0.1;
@@ -74,7 +79,10 @@
             vec2 s = fragCoord + vec2(0.0, -1.0);//south
             vec2 e = fragCoord + vec2(1.0, 0.0);//east
             vec2 w = fragCoord + vec2(-1.0, 0.0);//west
-
+            vec2 ne = fragCoord + vec2(1.0, 1.0);//northeast
+            vec2 nw = fragCoord + vec2(-1.0, 1.0);//northwest
+            vec2 se = fragCoord + vec2(1.0, -1.0);//southeast
+            vec2 sw = fragCoord + vec2(-1.0, -1.0);//southwest
 
             if (u_mouseEnable == 1.0){
                 vec2 pxDistFromMouse = (fragCoord - u_mouseCoord)*(fragCoord - u_mouseCoord);
@@ -86,12 +94,47 @@
                 }
             }
 
-            vec2 grad = texture2D(u_image, n/u_textureSize).xy + texture2D(u_image, s/u_textureSize).xy
-                + texture2D(u_image, e/u_textureSize).xy + texture2D(u_image, w/u_textureSize).xy - 4.0*currentState;
+            vec2 coordinates = gl_FragCoord.xy/u_textureSize-0.5;
+            coordinates *= -1.0;
+            float vortex = 0.0;
+            vec2 grad = - 3.0*currentState;
+            float radius = length(coordinates);
+            if (radius>u_vortexInnerRad/2.0 && radius<u_vortexOuterRad/2.0) {
+                vec2 normalizedCoord = normalize(coordinates);
+                float nMag = u_vortexMag*3.0*abs(dot(vec2(0,1), normalizedCoord));
+                float eMag = 3.0-nMag;//u_vortexMag*sqrt(1.0-nMag*nMag);
+                float neMag = u_vortexMag*0.02*abs(dot(vec2(1,1), normalizedCoord));
+                float nwMag = 0.02-neMag;
+                float scaling = (0.5*(nMag+eMag)+0.25*(neMag+nwMag))/3.0;
+                //nMag /= scaling;
+                //eMag /= scaling;
+                //neMag /= scaling;
+                //nwMag /= scaling;
+                float angle = atan(coordinates.y, coordinates.x)/6.28+0.5;
+                //vec4 R = vec4(cos(angle), sin(angle), -sin(angle), cos(angle));
+                //vec4 Rtranspose = vec4(cos(angle), -sin(angle), sin(angle), cos(angle));
+                //vec4 smat = Rtranspose[0]*normalizeCoord[0]
+
+                //grad += 0.5*(nMag*texture2D(u_image, n/u_textureSize).xy + nMag*texture2D(u_image, s/u_textureSize).xy
+                //    + eMag*texture2D(u_image, e/u_textureSize).xy + eMag*texture2D(u_image, w/u_textureSize).xy)
+                //    + 0.25*(neMag*texture2D(u_image, ne/u_textureSize).xy + nwMag*texture2D(u_image, nw/u_textureSize).xy
+                //    + nwMag*texture2D(u_image, se/u_textureSize).xy + neMag*texture2D(u_image, sw/u_textureSize).xy);
+
+                grad += 0.5*(texture2D(u_image, n/u_textureSize).xy + texture2D(u_image, s/u_textureSize).xy
+                    + texture2D(u_image, e/u_textureSize).xy + texture2D(u_image, w/u_textureSize).xy)
+                    +0.25*(texture2D(u_image, ne/u_textureSize).xy + texture2D(u_image, nw/u_textureSize).xy
+                    + texture2D(u_image, se/u_textureSize).xy + texture2D(u_image, sw/u_textureSize).xy);
+
+            } else {
+                grad += 0.5*(texture2D(u_image, n/u_textureSize).xy + texture2D(u_image, s/u_textureSize).xy
+                    + texture2D(u_image, e/u_textureSize).xy + texture2D(u_image, w/u_textureSize).xy)
+                    +0.25*(texture2D(u_image, ne/u_textureSize).xy + texture2D(u_image, nw/u_textureSize).xy
+                    + texture2D(u_image, se/u_textureSize).xy + texture2D(u_image, sw/u_textureSize).xy);
+            }
 
             float uvSq = u*v*v;
-            vec2 delta = dt*vec2(DuParam*grad.x - uvSq + u_feedRate*(1.0 - u),
-            DvParam*grad.y + uvSq - (u_feedRate + u_killRate)*v);
+            vec2 delta = dt*vec2(u_patternScale*DuParam*grad.x - uvSq + u_feedRate*(1.0 - u),
+                u_patternScale*DvParam*grad.y + uvSq - (u_feedRate + u_killRate)*v);
 
             gl_FragColor = vec4(u + delta.x, v + delta.y, 0, 1);
         }
@@ -101,6 +144,10 @@
 
 <canvas id="glcanvas"></canvas>
 <div id="controls">
+    <a href="#" id="reset" class="btn btn-lg btn-default">Reset Simulation</a>
+    <a href="#" id="play" class="btn btn-lg btn-success">Play (Spacebar)</a>
+    <a href="#" id="pause" class="btn btn-lg btn-warning">Pause (Spacebar)</a><br/><br/>
+
     Panel Type:
     <div class="indent">
         <label class="radio">
@@ -115,6 +162,10 @@
     <br/>
     <b>Reaction Diffusion Settings:</b><br/><br/>
         <div class="indent">
+            <div class="sliderInput" id="scale">
+                <span class="label-slider floatLeft">Pattern Scale: <br/></span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                <input value="" placeholder="" class="form-control" type="text">
+            </div>
             <div class="sliderInput" id="killRate">
                 <span class="label-slider floatLeft">Kill Rate: <br/></span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
                 <input value="" placeholder="" class="form-control" type="text">
@@ -123,11 +174,20 @@
                 <span class="label-slider floatLeft">Feed Rate: <br/></span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
                 <input value="" placeholder="" class="form-control" type="text">
             </div>
-            <a href="#" id="reset" class="btn btn-lg btn-default">Reset Simulation</a>
-            <a href="#" id="play" class="btn btn-lg btn-success">Play (Spacebar)</a>
-            <a href="#" id="pause" class="btn btn-lg btn-warning">Pause (Spacebar)</a>
         </div>
-
+    <b>Vortex Settings:</b><br/><br/>
+        <div class="sliderInput" id="vortexMag">
+            <span class="label-slider floatLeft">Strength: <br/></span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+            <input value="" placeholder="" class="form-control" type="text">
+        </div>
+        <div class="sliderInput" id="vortexInnerRad">
+            <span class="label-slider floatLeft">Inner Radius: <br/></span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+            <input value="" placeholder="" class="form-control" type="text">
+        </div>
+        <div class="sliderInput" id="vortexOuterRad">
+            <span class="label-slider floatLeft">Outer Radius: <br/></span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+            <input value="" placeholder="" class="form-control" type="text">
+        </div>
 </div>
 
 </body>

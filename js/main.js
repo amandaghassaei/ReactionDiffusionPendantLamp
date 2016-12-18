@@ -13,16 +13,21 @@ var states = [null, null];
 var resizedLastState;
 var resizedCurrentState;
 
-var dpi = 72;
-var pentEdgeLength = 5;// inches
+var pentRadius = 3;// inches
 
 var isPaused = false;
 
 var panelModeSelection = "pentagon";
 var killRate = 0.062;
 var feedRate = 0.0545;
+var patternScale = 1;
 
-var killRateLocation, feedRateLocation;
+var vortexMag = 1;
+var vortexInnerRad = 0.2;
+var vortexOuterRad = 0.8;
+
+var killRateLocation, feedRateLocation, patternScaleLocation;
+var vortexMagLocation, vortexInnerRadLocation, vortexOuterRadLocation;
 
 var width;
 var height;
@@ -37,6 +42,8 @@ var mouseCoordLocation;
 var mouseCoordinates =  [null, null];
 var mouseEnableLocation;
 var mouseEnable = false;
+
+var scaleFactor = 1;
 
 $(function(){
 
@@ -67,8 +74,29 @@ $(function(){
     mouseEnableLocation = gl.getUniformLocation(stepProgram, "u_mouseEnable");
     killRateLocation = gl.getUniformLocation(stepProgram, "u_killRate");
     feedRateLocation = gl.getUniformLocation(stepProgram, "u_feedRate");
+    patternScaleLocation = gl.getUniformLocation(stepProgram, "u_patternScale");
+    vortexMagLocation = gl.getUniformLocation(stepProgram, "u_vortexMag");
+    vortexInnerRadLocation = gl.getUniformLocation(stepProgram, "u_vortexInnerRad");
+    vortexOuterRadLocation = gl.getUniformLocation(stepProgram, "u_vortexOuterRad");
 
     frameBuffers = [makeFrameBuffer(), makeFrameBuffer()];
+
+    var dim = 500;
+    $canvas.width(dim);
+    $canvas.height(dim);
+
+    width = dim*scaleFactor;
+    height = dim*scaleFactor;
+
+    gl.viewport(0, 0, width, height);
+
+    // set the size of the texture
+    gl.useProgram(stepProgram);
+    gl.uniform2f(textureSizeLocation, width, height);
+    gl.useProgram(renderProgram);
+    gl.uniform2f(textureSizeLocationRender, width, height);
+
+    reset();
 
     initControls();
 
@@ -76,8 +104,8 @@ $(function(){
     canvas.onmousedown = onMouseDown;
     canvas.onmouseup = onMouseUp;
 
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+    canvas.width = canvas.clientWidth*scaleFactor;
+    canvas.height = canvas.clientHeight*scaleFactor;
 
     gl.bindTexture(gl.TEXTURE_2D, states[0]);//original texture
 
@@ -157,6 +185,10 @@ function render(){
 
         gl.uniform1f(killRateLocation, killRate);
         gl.uniform1f(feedRateLocation, feedRate);
+        gl.uniform1f(patternScaleLocation, patternScale);
+        gl.uniform1f(vortexMagLocation, vortexMag);
+        gl.uniform1f(vortexInnerRadLocation, vortexInnerRad);
+        gl.uniform1f(vortexOuterRadLocation, vortexOuterRad);
 
         for (var i=0;i<40;i++) {
             if (isPaused) {
