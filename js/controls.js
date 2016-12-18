@@ -27,17 +27,26 @@ function initControls(){
         gl.useProgram(renderProgram);
         gl.uniform2f(textureSizeLocationRender, width, height);
 
-        //texture for saving output from frag shader
-        resizedCurrentState = makeTexture(gl, null);
-
-        //fill with random pixels
-        var rgba = new Float32Array(width*height*4);
-        resizedLastState = makeTexture(gl, makeRandomArray(rgba));
+        reset();
 
         paused = false;
     }
     setSliderStopInput("scale", pentEdgeLength, 1, 100, 0.01, scaleCallBack);
     scaleCallBack(pentEdgeLength);
+
+    setRadio("panelMode", panelModeSelection, function(val){
+        panelModeSelection = val;
+    });
+
+    setSliderInput("#killRate", killRate, 0.045, 0.07, 0.001, function(val){
+        killRate = val;
+    });
+    setSliderInput("#feedRate", feedRate, 0.01, 0.1, 0.001, function(val){
+        feedRate = val;
+    });
+
+    setLink("#reset", reset);
+
 
     function setLink(id, callback){
         $(id).click(function(e){

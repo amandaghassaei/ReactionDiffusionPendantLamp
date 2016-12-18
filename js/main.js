@@ -16,6 +16,10 @@ var resizedCurrentState;
 var dpi = 72;
 var pentEdgeLength = 5;// inches
 
+var panelModeSelection = "pentagon";
+var killRate = 0.062;
+var feedRate = 0.0545;
+
 var width;
 var height;
 
@@ -68,7 +72,8 @@ $(function(){
     canvas.onmousedown = onMouseDown;
     canvas.onmouseup = onMouseUp;
 
-    resetWindow();
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
 
     gl.bindTexture(gl.TEXTURE_2D, states[0]);//original texture
 
@@ -175,10 +180,13 @@ function step(i){
 }
 
 
-function resetWindow(){
-    //todo this
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+function reset(){
+    //texture for saving output from frag shader
+    resizedCurrentState = makeTexture(gl, null);
+
+    //fill with random pixels
+    var rgba = new Float32Array(width*height*4);
+    resizedLastState = makeTexture(gl, makeRandomArray(rgba));
 }
 
 function onMouseMove(e){

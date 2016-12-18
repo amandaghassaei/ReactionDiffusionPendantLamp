@@ -22,11 +22,21 @@ body{
 }
 
 #glcanvas{
+    /*padding:20px;*/
+}
+
+#controls{
+    width: 380px;
+    height:100%;
     padding:20px;
+    position:absolute;
+    /*background: white;*/
+    top:0;
+    right:0;
 }
 
 .sliderInput{
-    float:right;
+    /*float:right;*/
     display: inline-block;
     margin-bottom:15px;
 }
@@ -36,7 +46,7 @@ body{
 }
 
 .indent{
-    padding-left:20px;
+    padding-left:40px;
 }
 
 a{
@@ -181,6 +191,7 @@ span.modal-close{
 
 .label-slider{
     font-size: 15px;
+    display: inline-block;
 }
 
 .extraSpace{
