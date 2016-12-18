@@ -16,6 +16,8 @@ var resizedCurrentState;
 var dpi = 72;
 var pentEdgeLength = 5;// inches
 
+var isPaused = false;
+
 var panelModeSelection = "pentagon";
 var killRate = 0.062;
 var feedRate = 0.0545;
@@ -35,8 +37,6 @@ var mouseCoordLocation;
 var mouseCoordinates =  [null, null];
 var mouseEnableLocation;
 var mouseEnable = false;
-
-var paused = false;//while window is resizing
 
 $(function(){
 
@@ -133,7 +133,7 @@ function makeTexture(gl, data){
 
 function render(){
 
-    if (!paused) {
+    if (!isPaused) {
 
         gl.useProgram(stepProgram);
 
@@ -159,7 +159,7 @@ function render(){
         gl.uniform1f(feedRateLocation, feedRate);
 
         for (var i=0;i<40;i++) {
-            if (paused) {
+            if (isPaused) {
                 window.requestAnimationFrame(render);
                 return;
             }

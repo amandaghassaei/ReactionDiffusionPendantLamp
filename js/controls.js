@@ -46,6 +46,29 @@ function initControls(){
     });
 
     setLink("#reset", reset);
+    setLink("#play", function(){
+        isPaused = false;
+        $("#pause").show();
+        $("#play").hide();
+    });
+    setLink("#pause", function(){
+        isPaused = true;
+        $("#pause").hide();
+        $("#play").show();
+    });
+
+    $(window).keyup(function(e){
+        if (e.keyCode == 32){
+            isPaused = !isPaused;
+            if (isPaused){
+                $("#pause").hide();
+                $("#play").show();
+            } else {
+                $("#pause").show();
+                $("#play").hide();
+            }
+        }
+    });
 
 
     function setLink(id, callback){
